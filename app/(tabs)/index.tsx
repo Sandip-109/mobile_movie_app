@@ -1,11 +1,11 @@
 import MovieCard from "@/components/MovieCard";
 import SearchBar from "@/components/Searchbar";
 import TrendingCard from "@/components/TrendingCard";
-import useFetch from "@/services/useFetch";
-import { router } from "expo-router";
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
 import { fetchMovies } from "@/services/api";
+import useFetch from "@/services/useFetch";
+import { router } from "expo-router";
 
 import {
   ActivityIndicator,
@@ -31,7 +31,10 @@ const Index = () => {
       <ScrollView
         className="flex-1 px-5"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ minHeight: "100%", paddingBottom: 10 }}
+        contentContainerStyle={{
+          minHeight: "100%",
+          paddingBottom: (54 + StatusBar.currentHeight!) as number,
+        }}
       >
         <Image source={icons.logo} className="w-12 h-10 mt-10 mb-5 mx-auto" />
         {moviesLoading ?
