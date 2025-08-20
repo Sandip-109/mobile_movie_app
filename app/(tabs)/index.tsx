@@ -1,20 +1,23 @@
 import MovieCard from "@/components/MovieCard";
+import SearchBar from "@/components/Searchbar";
+import TrendingCard from "@/components/TrendingCard";
+import useFetch from "@/services/useFetch";
+import { router } from "expo-router";
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
 import { fetchMovies } from "@/services/api";
-import useFetch from "@/services/useFetch";
-import { router } from "expo-router";
+
 import {
   ActivityIndicator,
   FlatList,
   Image,
   ScrollView,
+  StatusBar,
   Text,
-  TextInput,
   View,
 } from "react-native";
 
-export default function Index() {
+const Index = () => {
   const {
     data: movies,
     loading: moviesLoading,
@@ -24,34 +27,58 @@ export default function Index() {
   return (
     <View className="flex-1 bg-primary">
       <Image source={images.bg} className="absolute w-full z-0" />
+      <View style={{ height: StatusBar.currentHeight }}></View>
       <ScrollView
-        className="flex-1 p-5"
+        className="flex-1 px-5"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          minHeight: "100%",
-          paddingBottom: 10,
-        }}
+        contentContainerStyle={{ minHeight: "100%", paddingBottom: 10 }}
       >
-        <Image source={icons.logo} className="w-12 h-10 mt-20 mb-5 mx-auto" />
+        <Image source={icons.logo} className="w-12 h-10 mt-10 mb-5 mx-auto" />
         {moviesLoading ?
-          <ActivityIndicator size="small" />
+          <ActivityIndicator
+            size="large"
+            color="#0000ff"
+            className="mt-10 self-center"
+          />
         : moviesError ?
-          <Text>Error: {moviesError?.message}</Text>
+          <Text>Error: {moviesError.message}</Text>
         : <View className="flex-1 mt-5">
             <SearchBar
-              value=""
-              onChangeText={() => {}}
+              onPress={() => {
+                router.push("/search");
+              }}
               placeholder="Search for a movie"
-              onPress={() => router.push("/search")}
             />
+
+            <View className="mt-10">
+              <Text className="text-lg text-white font-bold mb-3">
+                Trending Movies
+              </Text>
+              <FlatList
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                className="mb-4 mt-3"
+                data={movies?.slice(-5) || []}
+                contentContainerStyle={{
+                  gap: 26,
+                  paddingRight: 20,
+                }}
+                renderItem={({ item, index }) => (
+                  <TrendingCard movie={item} index={index} />
+                )}
+                ItemSeparatorComponent={() => <View className="w-4" />}
+              />
+            </View>
+
             <>
-              <Text className="text-lg text-white font-bold">
+              <Text className="text-lg text-white font-bold mt-5 mb-3">
                 Latest Movies
               </Text>
 
               <FlatList
                 data={movies}
                 renderItem={({ item }) => <MovieCard {...item} />}
+                keyExtractor={(item) => item.id.toString()}
                 numColumns={3}
                 columnWrapperStyle={{
                   justifyContent: "flex-start",
@@ -59,9 +86,6 @@ export default function Index() {
                   paddingRight: 5,
                   marginBottom: 10,
                 }}
-                className="mt-2 pb-32"
-                keyExtractor={(item) => item.id.toString()}
-                scrollEnabled={false}
               />
             </>
           </View>
@@ -69,37 +93,6 @@ export default function Index() {
       </ScrollView>
     </View>
   );
-}
-
-type SearchBarProps = {
-  placeholder: string;
-  onPress?: () => void;
-  value: string;
-  onChangeText: (text: string) => void;
 };
 
-export const SearchBar = ({
-  placeholder,
-  onPress,
-  value,
-  onChangeText,
-}: SearchBarProps) => {
-  return (
-    <View className="flex-row items-center bg-dark-200 rounded-full px-5 py-4">
-      <Image
-        source={icons.search}
-        className="size-5"
-        resizeMode="contain"
-        tintColor="#ab8bff"
-      />
-      <TextInput
-        onPress={onPress}
-        placeholder={placeholder}
-        value={value || ""}
-        onChangeText={onChangeText}
-        placeholderTextColor="#a8b5bb"
-        className="flex-1 ml-2 text-white"
-      />
-    </View>
-  );
-};
+export default Index;

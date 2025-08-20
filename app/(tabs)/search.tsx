@@ -1,29 +1,36 @@
 import MovieCard from "@/components/MovieCard";
+import React, { useCallback, useEffect, useState } from "react";
+import Searchbar from "@/components/Searchbar";
+import useFetch from "@/services/useFetch";
+import { ActivityIndicator, FlatList, Image, Text, View } from "react-native";
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
 import { fetchMovies } from "@/services/api";
-import useFetch from "@/services/useFetch";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Text, View } from "react-native";
-import { SearchBar } from "./index";
 
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const {
     data: movies,
-    loading: moviesLoading,
-    error: moviesError,
-    refetch,
+    loading,
+    error,
+    refetch: loadMovies,
+    reset,
   } = useFetch(() => fetchMovies({ query: searchQuery }), false);
 
+  const getSearchedMovies = useCallback(async () => {
+    if (searchQuery.trim()) {
+      await loadMovies();
+    } else {
+      reset();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
+
   useEffect(() => {
-    const timeoutId = setTimeout(async () => {
-      if (searchQuery) await refetch();
-    }, 500);
+    const timeoutId = setTimeout(getSearchedMovies, 500);
 
     return () => clearTimeout(timeoutId);
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
@@ -32,14 +39,14 @@ const Search = () => {
       <Image
         source={images.bg}
         className="flex-1 absolute w-full z-0"
-        resizeMode="cover"
+        resizeMode="contain"
       />
       <FlatList
         data={movies}
         renderItem={({ item }) => <MovieCard {...item} />}
+        keyExtractor={(item) => item.id.toString()}
         className="px-5"
         numColumns={3}
-        keyExtractor={(item) => item.id.toString()}
         columnWrapperStyle={{
           justifyContent: "center",
           gap: 16,
@@ -53,43 +60,36 @@ const Search = () => {
             <View className="w-full flex-row justify-center mt-20 items-center">
               <Image source={icons.logo} className="w-12 h-10" />
             </View>
-
             <View className="my-5">
-              <SearchBar
+              <Searchbar
                 placeholder="Search movies..."
-                onPress={() => {}}
                 value={searchQuery}
                 onChangeText={(text: string) => setSearchQuery(text)}
               />
             </View>
-
-            {moviesLoading && (
+            {loading && (
               <ActivityIndicator
                 size="large"
                 color="#0000ff"
                 className="my-3"
               />
             )}
-
-            {moviesError && (
+            {error && (
               <Text className="text-red-500 px-5 my-3">
-                Error: {moviesError.message}
+                Error: {error.message}
               </Text>
             )}
 
-            {!moviesLoading &&
-              !moviesError &&
-              searchQuery.trim() &&
-              movies?.length > 0 && (
-                <Text className="text-xl text-white font-bold">
-                  Search results for{" "}
-                  <Text className="text-accent">{searchQuery}</Text>
-                </Text>
-              )}
+            {!loading && !error && searchQuery.trim() && movies?.length > 0 && (
+              <Text className="text-xl text-white font-bold">
+                Search Results for{" "}
+                <Text className="text-accent">{searchQuery}</Text>
+              </Text>
+            )}
           </>
         }
         ListEmptyComponent={
-          !moviesLoading && !moviesError ?
+          !loading && !error ?
             <View className="mt-10 px-5">
               <Text className="text-center text-gray-500">
                 {searchQuery.trim() ? "No movies found" : "Search for a movie"}
